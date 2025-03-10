@@ -1,65 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, FlatList, Alert, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import ShoppingList from './components/ShoppingList';
-import InputField from './components/InputFields';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
+import Home from './components/Home';
+import Navbar from './components/Navbar';
 
-const App = () => {
-  const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-  const saveItems = async (newItems) => {
-    try {
-      await AsyncStorage.setItem('shoppingItems', JSON.stringify(newItems));
-      setItems(newItems);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save items.');
-    }
-  };
-
-  const loadItems = async () => {
-    try {
-      const storedItems = await AsyncStorage.getItem('shoppingItems');
-      if (storedItems) {
-        setItems(JSON.parse(storedItems));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load items.');
-    }
-  };
-
-  const addItem = (text) => {
-    if (!text.trim()) return;
-    const newItem = { id: Date.now().toString(), text, checked: false };
-    saveItems([...items, newItem]);
-  };
-
-  const removeItem = (id) => {
-    saveItems(items.filter((item) => item.id !== id));
-  };
-
-  const toggleItem = (id) => {
-    const updatedItems = items.map((item) =>
-      item.id === id ? { ...item, checked: !item.checked } : item
-    );
-    saveItems(updatedItems);
-  };
-
+export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Shopping List</Text>
-      <InputField addItem={addItem} />
-      <ShoppingList items={items} toggleItem={toggleItem} removeItem={removeItem} />
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Navbar />
+      <Home />
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
-
-export default App;
