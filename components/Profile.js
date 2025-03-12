@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Button, Alert } from 'react-native';
-import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { FaUserCircle } from 'react-icons/fa';
+import { View, Text, TextInput, Button, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { updateUserProfile, logout } from '../redux/authSlice';
 
 const Profile = ({ onClose }) => {
@@ -13,12 +13,13 @@ const Profile = ({ onClose }) => {
     const [showButtons, setShowButtons] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [formValues, setFormValues] = useState({ name: '', email: '', cellphone: '' });
-    const navigate = useNavigate();
+    const navigation = useNavigation();
     const [loggedOut, setLoggedOut] = useState(false);
 
     useEffect(() => {
-        const storedUserEmail = localStorage.getItem('loggedInUser');
-        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const storedUserEmail = ''; // Replace with AsyncStorage retrieval logic
+        const users = []; // Replace with AsyncStorage retrieval logic
+
         const localStorageUser = users.find((u) => u.email === storedUserEmail);
 
         if (reduxUser || localStorageUser) {
@@ -28,81 +29,82 @@ const Profile = ({ onClose }) => {
             setFormValues({ ...currentUser, cellphone: currentUser.cellphone || '' });
         } else if (!loggedOut) {
             Alert.alert('Not Logged In', 'You must be logged in to view your profile.', [
-                { text: 'OK', onPress: () => navigate('/login') },
+                { text: 'OK', onPress: () => navigation.navigate('Login') },
             ]);
         }
-    }, [reduxUser, loggedOut, navigate]);
+    }, [reduxUser, loggedOut, navigation]);
 
     const handleLogout = () => {
-        Alert.alert('Are you sure?', 'You want to log out?', [
-            {
-                text: 'No, stay logged in',
-                style: 'cancel',
-            },
-            {
-                text: 'Yes, log out',
-                onPress: () => {
-                    dispatch(logout());
-                    setLoggedOut(true);
-                    if (onClose) onClose();
-                    navigate('/');
+        Alert.alert(
+            'Log Out',
+            'Are you sure you want to log out?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Log Out',
+                    style: 'destructive',
+                    onPress: () => {
+                        dispatch(logout());
+                        setLoggedOut(true);
+                        if (onClose) onClose();
+                        navigation.navigate('Home');
+                    },
                 },
-            },
-        ]);
+            ]
+        );
     };
 
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const newProfileImage = e.target.result;
+    const handleImageChange = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            Alert.alert('Permission Required', 'You need to allow access to your photos.');
+            return;
+        }
 
-                setProfileImage(newProfileImage);
-                setShowButtons(false);
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1,
+        });
 
-                const updatedUser = { ...user, profileImage: newProfileImage };
-                setUser(updatedUser);
-                dispatch(updateUserProfile(updatedUser));
+        if (!result.canceled) {
+            const newProfileImage = result.uri;
 
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const updatedUsers = users.map((u) =>
-                    u.email === updatedUser.email ? updatedUser : u
-                );
-                localStorage.setItem('users', JSON.stringify(updatedUsers));
+            setProfileImage(newProfileImage);
+            setShowButtons(false);
 
-                Alert.alert('Image Updated', 'Your profile image has been updated.');
-            };
-            reader.readAsDataURL(file);
+            const updatedUser = { ...user, profileImage: newProfileImage };
+            setUser(updatedUser);
+            dispatch(updateUserProfile(updatedUser));
+
+            // Replace with AsyncStorage update logic
+            Alert.alert('Image Updated', 'Your profile image has been updated.');
         }
     };
 
     const removeImage = () => {
-        Alert.alert('Are you sure?', 'This will remove your profile picture.', [
-            {
-                text: 'No, keep it',
-                style: 'cancel',
-            },
-            {
-                text: 'Yes, remove it',
-                onPress: () => {
-                    setProfileImage(null);
-                    setShowButtons(false);
+        Alert.alert(
+            'Remove Photo',
+            'Are you sure you want to remove your profile picture?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () => {
+                        setProfileImage(null);
+                        setShowButtons(false);
 
-                    const updatedUser = { ...user, profileImage: null };
-                    setUser(updatedUser);
-                    dispatch(updateUserProfile(updatedUser));
+                        const updatedUser = { ...user, profileImage: null };
+                        setUser(updatedUser);
+                        dispatch(updateUserProfile(updatedUser));
 
-                    const users = JSON.parse(localStorage.getItem('users')) || [];
-                    const updatedUsers = users.map((u) =>
-                        u.email === updatedUser.email ? updatedUser : u
-                    );
-                    localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-                    Alert.alert('Image Removed', 'Your profile picture has been removed.');
+                        // Replace with AsyncStorage update logic
+                        Alert.alert('Image Removed', 'Your profile picture has been removed.');
+                    },
                 },
-            },
-        ]);
+            ]
+        );
     };
 
     const handleEditClick = () => {
@@ -129,147 +131,110 @@ const Profile = ({ onClose }) => {
         return true;
     };
 
-    const handleFormSubmit = (e) => {
-        e.preventDefault();
+    const handleFormSubmit = () => {
         if (!validateForm()) return;
 
         const updatedUser = { ...formValues, profileImage };
         setUser(updatedUser);
         dispatch(updateUserProfile(updatedUser));
 
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const updatedUsers = users.map((u) =>
-            u.email === updatedUser.email ? updatedUser : u
-        );
-        localStorage.setItem('users', JSON.stringify(updatedUsers));
-
+        // Replace with AsyncStorage update logic
         setIsEditing(false);
         Alert.alert('Profile Updated', 'Your profile has been updated successfully.');
     };
 
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
+    const handleFormChange = (key, value) => {
+        setFormValues((prevValues) => ({ ...prevValues, [key]: value }));
     };
 
     return (
-        <View style={styles.profileContainer}>
+        <View style={styles.container}>
             {!isEditing ? (
                 <>
-                    <View style={styles.editProfile}>
-                        <Text style={styles.profileHeading}>Profile</Text>
-                        <TouchableOpacity style={styles.editProfileBtn} onPress={handleEditClick}>
-                            <Text style={styles.btnText}>Edit Profile</Text>
+                    <View style={styles.header}>
+                        <Text style={styles.title}>Profile</Text>
+                        <TouchableOpacity onPress={handleEditClick} style={styles.editButton}>
+                            <Text style={styles.editButtonText}>Edit Profile</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.profileIcons}>
+                    <TouchableOpacity
+                        onPress={() => profileImage && setShowButtons(!showButtons)}
+                        style={styles.imageContainer}
+                    >
                         {profileImage ? (
-                            <Image
-                                source={{ uri: profileImage }}
-                                style={styles.profileImage}
-                            />
+                            <Image source={{ uri: profileImage }} style={styles.profileImage} />
                         ) : (
-                            <FaUserCircle size={100} style={styles.defaultProfileIcon} />
+                            <Text style={styles.defaultProfileIcon}>🙂</Text>
                         )}
-                        {showButtons && (
-                            <View style={styles.profileImageButtons}>
-                                <TouchableOpacity
-                                    style={styles.uploadBtn}
-                                    onPress={() => document.getElementById('profileImageInput').click()}
-                                >
-                                    <Text style={styles.btnText}>Upload Photo</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.removeBtn}
-                                    onPress={removeImage}
-                                >
-                                    <Text style={styles.btnText}>Remove Photo</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-                    <View style={styles.profileDetails}>
+                    </TouchableOpacity>
+                    {showButtons && (
+                        <View style={styles.buttonContainer}>
+                            <Button title="Upload Photo" onPress={handleImageChange} />
+                            <Button title="Remove Photo" onPress={removeImage} color="red" />
+                        </View>
+                    )}
+                    <View style={styles.details}>
                         <Text><Text style={styles.label}>Username:</Text> {user.name}</Text>
                         <Text><Text style={styles.label}>Email:</Text> {user.email}</Text>
                         {user.cellphone && <Text><Text style={styles.label}>Cellphone:</Text> {user.cellphone}</Text>}
                     </View>
-                    <View style={styles.profileActions}>
-                        <TouchableOpacity style={styles.profileBtn}>
-                            <Text style={styles.btnText}>Settings</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-                            <Text style={styles.btnText}>Log Out</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <Button title="Log Out" onPress={handleLogout} color="red" />
                 </>
             ) : (
-                <View style={styles.editProfileForm}>
-                    <Text style={styles.profileHeading}>Edit Profile</Text>
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Username:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={formValues.name}
-                            onChange={handleFormChange}
-                            name="name"
-                            required
-                        />
-                    </View>
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Email:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={formValues.email}
-                            onChange={handleFormChange}
-                            name="email"
-                            editable={false}
-                            required
-                        />
-                    </View>
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Cellphone:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={formValues.cellphone}
-                            onChange={handleFormChange}
-                            name="cellphone"
-                        />
-                    </View>
-                    <TouchableOpacity onPress={handleFormSubmit} style={styles.saveBtn}>
-                        <Text style={styles.btnText}>Save Changes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.cancelBtn}
-                        onPress={() => setIsEditing(false)}
-                    >
-                        <Text style={styles.btnText}>Cancel</Text>
-                    </TouchableOpacity>
+                <View style={styles.form}>
+                    <Text style={styles.title}>Edit Profile</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Username"
+                        value={formValues.name}
+                        onChangeText={(value) => handleFormChange('name', value)}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        value={formValues.email}
+                        editable={false}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Cellphone"
+                        value={formValues.cellphone}
+                        onChangeText={(value) => handleFormChange('cellphone', value)}
+                    />
+                    <Button title="Save Changes" onPress={handleFormSubmit} />
+                    <Button title="Cancel" onPress={() => setIsEditing(false)} color="red" />
                 </View>
             )}
         </View>
     );
 };
 
-const styles = {
-    profileContainer: {
-        margin: 20,
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
         padding: 20,
         backgroundColor: '#f9f9f9',
-        borderRadius: 8,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 20,
     },
-    profileHeading: {
+    title: {
         fontSize: 24,
-        marginBottom: 20,
-    },
-    profileDetails: {
-        marginBottom: 20,
-        alignItems: 'flex-start',
-    },
-    label: {
         fontWeight: 'bold',
     },
-    profileIcons: {
+    editButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+    },
+    editButtonText: {
+        color: '#fff',
+    },
+    imageContainer: {
+        alignItems: 'center',
         marginBottom: 20,
     },
     profileImage: {
@@ -278,66 +243,29 @@ const styles = {
         borderRadius: 50,
     },
     defaultProfileIcon: {
-        width: 100,
-        height: 100,
+        fontSize: 100,
     },
-    profileImageButtons: {
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
         marginTop: 10,
-        flexDirection: 'row',
-        gap: 10,
     },
-    uploadBtn: {
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
+    details: {
+        marginBottom: 20,
     },
-    removeBtn: {
-        backgroundColor: '#dc3545',
-        padding: 10,
-        borderRadius: 5,
+    label: {
+        fontWeight: 'bold',
     },
-    btnText: {
-        color: '#fff',
-    },
-    profileActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    profileBtn: {
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
-    },
-    logoutBtn: {
-        backgroundColor: '#dc3545',
-        padding: 10,
-        borderRadius: 5,
-    },
-    editProfileForm: {
-        width: '100%',
-    },
-    formGroup: {
-        marginBottom: 10,
+    form: {
+        marginTop: 20,
     },
     input: {
-        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+        marginBottom: 15,
+        fontSize: 16,
         padding: 10,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
     },
-    saveBtn: {
-        backgroundColor: '#4CAF50',
-        padding: 10,
-        borderRadius: 5,
-        marginRight: 10,
-    },
-    cancelBtn: {
-        backgroundColor: '#f44336',
-        padding: 10,
-        borderRadius: 5,
-    },
-};
+});
 
 export default Profile;

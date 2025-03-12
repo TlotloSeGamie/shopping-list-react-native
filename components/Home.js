@@ -1,104 +1,115 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React from "react";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
 
 const Home = () => {
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.hero}>
-        <Text style={styles.title}>
-          Welcome to <Text style={styles.highlight}>Shopping Baskette</Text>
-        </Text>
-        <Text style={styles.description}>
-          Manage your shopping efficiently with <Text style={styles.highlight}>ShoppingList</Text> – your ultimate tool for organizing and prioritizing your shopping items!
-        </Text>
-        <TouchableOpacity style={styles.getStartedBtn}>
-          <Text style={styles.btnText}>Get Started</Text>
-        </TouchableOpacity>
-      </View>
+  const navigation = useNavigation();
 
-      <View style={styles.features}>
-        <Text style={styles.featuresTitle}>Why Choose Us?</Text>
-        <View style={styles.listContainer}>
-          <Text style={styles.listItem}>✔ Add items to your shopping list easily</Text>
-          <Text style={styles.listItem}>✔ Remove items when they're no longer needed</Text>
-          <Text style={styles.listItem}>✔ Track what you need to buy seamlessly</Text>
+  return (
+    <View style={styles.main}>
+      <View style={styles.homeContainer}>
+        <View style={styles.hero}>
+          <Text style={styles.heroTitle}>
+            Welcome to <Text style={styles.highlight}>Shopping Baskette</Text>
+          </Text>
+          <Text style={styles.heroDescription}>
+            Manage your shopping efficiently with{" "}
+            <Text style={styles.highlight}>Baskettet</Text> – your ultimate tool for organizing and prioritizing your shopping items!
+          </Text>
+          <TouchableOpacity
+            style={styles.getStartedBtn}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Text style={styles.getStartedBtnText}>Get Started</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.features}>
+          <Text style={styles.featuresTitle}>Why Choose Us?</Text>
+          <View>
+            <Text style={styles.featuresItem}>✔ Add items to your shopping list easily</Text>
+            <Text style={styles.featuresItem}>✔ Remove items when they're no longer needed</Text>
+            <Text style={styles.featuresItem}>✔ Track what you need to buy seamlessly</Text>
+          </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#f0f0f0',
-    padding: 20,
-    alignItems: 'center',
+  main: {
+    flex: 1,
+    padding: 40,
+    backgroundColor: "#f0f0f0",
+  },
+  homeContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 40,
   },
   hero: {
-    width: '100%',
-    backgroundColor: '#d3d3d3',
+    alignItems: "center",
+    backgroundColor: "#d3d3d3",
     padding: 30,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    alignItems: 'center',
-    marginBottom: 20,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  title: {
+  heroTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2f4f4f',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#2f4f4f",
+    textAlign: "center",
   },
   highlight: {
-    color: '#4682b4',
+    color: "#4682b4",
   },
-  description: {
+  heroDescription: {
     fontSize: 16,
-    marginTop: 10,
-    textAlign: 'center',
+    marginVertical: 15,
+    textAlign: "center",
+    color: "#2f4f4f",
   },
   getStartedBtn: {
-    backgroundColor: '#4682b4',
-    paddingVertical: 12,
+    backgroundColor: "#4682b4",
+    paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
-    marginTop: 20,
+    marginTop: 10,
   },
-  btnText: {
-    color: '#fff',
+  getStartedBtnText: {
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   features: {
-    width: '100%',
-    backgroundColor: '#d3d3d3',
+    backgroundColor: "#d3d3d3",
     padding: 30,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    alignItems: 'center',
+    shadowRadius: 8,
+    elevation: 2,
   },
   featuresTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2f4f4f',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#2f4f4f",
+    marginBottom: 15,
   },
-  listContainer: {
-    marginTop: 15,
-    alignItems: 'flex-start',
-  },
-  listItem: {
+  featuresItem: {
     fontSize: 16,
+    color: "#2f4f4f",
     marginBottom: 10,
-    color: '#2f4f4f',
   },
 });
+
 
 export default Home;
